@@ -36,8 +36,8 @@ class ValGPT(BaseBotWithLocalDb):
                     chatgpt_messages.append({'role': 'assistant', 'content': msg.get_text()})
             # add current message last
             chatgpt_messages.append({'role': 'user', 'content': message.get_text()})
-            # Call OpenAI API (this will fail without API key)
-            chatgpt_response = openai.ChatCompletion.create(model="gpt-3.5-turbo",messages=chatgpt_messages)
+            # chatgpt_response = openai.ChatCompletion.create(model="gpt-3.5-turbo",messages=chatgpt_messages)
+            chatgpt_response = openai.ChatCompletion.create(model="gpt-4",messages=chatgpt_messages)
             response_text = chatgpt_response['choices'][0]['message']['content']
             resp_message.set_text(response_text)
             return resp_message
