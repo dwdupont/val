@@ -8,8 +8,9 @@ from utils.boto_utils import get_text_from_s3
 import re
 from utils.homerank_utils import HomeRank, RankValue, value_home
 import pandas as pd 
+import os 
 
-home_data = pd.read_csv('All-Market-Data.csv')
+# home_data = pd.read_csv('All-Market-Data.csv')
 
 def parse_address(address_string):
     address_regex = r'(\d+\s+\w+\s+\w+|[A-Za-z]+\s+\d+)(,\s+)?([A-Za-z\s]+)(,\s+)?([A-Za-z]{2})(\s+)?(\d{5})?'
@@ -25,7 +26,7 @@ def parse_address(address_string):
             'local_address': local_address,
             'city': city,
             'state': state,
-            'zip_code': zip_code
+            'zip_code': int(zip_code)
         }
     else:
         return None
@@ -36,12 +37,12 @@ QUESTIONS = [
     'Address? (Including zip code)',
     'House size (sqft)?',
     'Lot size (sqft)?',
-    'Bucket #1: Neighborhood, Community, School District, and General Jurisdiction\n\nProvide a value from 1 to 100.',
-    'Bucket #2: Specific Location (Proximity to jobs, schools, shopping, hazard zones etc.)\n\nProvide a value from 1 to 100.',
-    'Bucket #3: Actual Site-Lot Attributes (views, Lot size, grade, sunlight exposure, etc.)\n\nProvide a value from 1 to 100.',
-    'Bucket #4: Design, Layout, flow and Large-Scale architectural Decisions\n\nProvide a value from 1 to 100.',
-    'Bucket #5: Finish and Features (Craftsmanship, countertops, lighting, appliances etc.)\n\nProvide a value from 1 to 100.',
-    'Bucket #6: Condition and Maintenance (Plumbing, electrical, foundation, siding, roof etc.)\n\nProvide a value from 1 to 100.',
+    'Rate Bucket #1: Neighborhood, Community, School District, and General Jurisdiction\n\nProvide a relative rating between from 1 to 100.',
+    'Rate Bucket #2: Specific Location (Proximity to jobs, schools, shopping, hazard zones etc.)\n\nProvide a relative rating between from 1 to 100.',
+    'Rate Bucket #3: Actual Site-Lot Attributes (views, Lot size, grade, sunlight exposure, etc.)\n\nProvide a relative rating between from 1 to 100.',
+    'Rate Bucket #4: Design, Layout, flow and Large-Scale architectural Decisions\n\nProvide a relative rating between from 1 to 100.',
+    'Rate Bucket #5: Finish and Features (Craftsmanship, countertops, lighting, appliances etc.)\n\nProvide a relative rating between from 1 to 100.',
+    'Rate Bucket #6: Condition and Maintenance (Plumbing, electrical, foundation, siding, roof etc.)\n\nProvide a relative rating between from 1 to 100.',
 ]
 
 
@@ -140,9 +141,20 @@ class ValGPT(BaseBotWithLocalDb):
                 if len(answers) == len(QUESTIONS):
                     # run valuation code 
                     # return valuation
-                    hr = value_home(home_data, answers[0]['zip_code'], answers[1], answers[2], 
-                                    answers[3], answers[4], answers[5], answers[6], answers[7], answers[8])
-                    if hr is None:
+                    # for q,a in zip(QUESTIONS, answers):
+                    #     print(q,a)
+                    zipcode = answers[0]['zip_code']
+                    if os.path.exists(os.path.join('data/market-data-zipcode', f'{int(zipcode)}.csv')):
+                        home_data = pd.read_csv(os.path.join('data/market-data-zipcode', f'{int(zipcode)}.csv'))
+                        hr = value_home(home_data, answers[0]['zip_code'], answers[1], answers[2], 
+                                        answers[3], answers[4], answers[5], answers[6], answers[7], answers[8])
+                    elif os.path.exists(os.path.join('data/market-data-zipcode', f'{float(zipcode)}.csv')):
+                        home_data = pd.read_csv(os.path.join('data/market-data-zipcode', f'{float(zipcode)}.csv'))
+                        hr = value_home(home_data, answers[0]['zip_code'], answers[1], answers[2], 
+                                        answers[3], answers[4], answers[5], answers[6], answers[7], answers[8])
+                    else:
+                        hr = None
+                    if hr is not None:
                         home_value_ratio = round( hr.scv.value / hr.llv.value, 2)
                         txt = f'Great, based upon your ratings for these groupings or “buckets” of home attributes the results are:\n' \
                             + f'Lot-Location Value = ${hr.llv.value:,.2f}\n' \

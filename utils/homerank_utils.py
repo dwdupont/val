@@ -37,16 +37,17 @@ def value_home(data, zipcode:int, house_size:int, lot_size:int,
     hr = HomeRank(zipcode=zipcode, house_sqft=RankValue(value=house_size), lot_sqft=RankValue(value=lot_size),
                  llv1=RankValue(rank=bucket1), llv2=RankValue(rank=bucket2), llv3=RankValue(rank=bucket3),
                  scq1=RankValue(rank=bucket4), scq2=RankValue(rank=bucket5), scq3=RankValue(rank=bucket6))
-    zdata = data.loc[data['zip'] == hr.zipcode]
+    zdata = data.loc[data['zip'] == zipcode]
     if len(zdata) == 0:
+        print('None for Zipcode ', zipcode)
         return None
-    hr.llv1.value = zdata.loc[zdata['rank'] == hr.llv1.rank].iloc[0]['llv_dom']
-    hr.llv2.value = zdata.loc[zdata['rank'] == hr.llv2.rank].iloc[0]['llv_sub_dom_1']
-    hr.llv3.value = zdata.loc[zdata['rank'] == hr.llv3.rank].iloc[0]['llv_sub_dom_2']
+    hr.llv1.value = zdata.loc[hr.llv1.rank-1]['llv_dom']
+    hr.llv2.value = zdata.loc[hr.llv2.rank-1]['llv_sub_dom_1']
+    hr.llv3.value = zdata.loc[hr.llv3.rank-1]['llv_sub_dom_2']
     
-    hr.scq1.value = zdata.loc[zdata['rank'] == hr.scq1.rank].iloc[0]['quality_dom'] 
-    hr.scq2.value = zdata.loc[zdata['rank'] == hr.scq2.rank].iloc[0]['quality_sub_dom_1'] 
-    hr.scq3.value = zdata.loc[zdata['rank'] == hr.scq3.rank].iloc[0]['quality_sub_dom_2']
+    hr.scq1.value = zdata.loc[hr.scq1.rank-1]['quality_dom'] 
+    hr.scq2.value = zdata.loc[hr.scq2.rank-1]['quality_sub_dom_1'] 
+    hr.scq3.value = zdata.loc[hr.scq3.rank-1]['quality_sub_dom_2']
     
     hr.llv = RankValue(value=hr.llv1.value + hr.llv2.value + hr.llv3.value)
     hr.scq = RankValue(value=hr.scq1.value + hr.scq2.value + hr.scq3.value)
@@ -72,35 +73,35 @@ def value_home(data, zipcode:int, house_size:int, lot_size:int,
     for i in range(len(zdata)):
         if abs(zdata.iloc[i]['lot_location_value'] - hr.llv.value) < closest_llv:
             closest_llv = abs(zdata.iloc[i]['lot_location_value'] - hr.llv.value)
-            hr.llv.rank = zdata.iloc[i]['rank']
+            hr.llv.rank = i+1
         if abs(zdata.iloc[i]['quality'] - hr.scq.value) < closest_scq:
             closest_scq = abs(zdata.iloc[i]['quality'] - hr.scq.value)
-            hr.scq.rank = zdata.iloc[i]['rank']
+            hr.scq.rank = i+1
         if abs(zdata.iloc[i]['scv_dom_1'] - hr.scv1.value) < closest_scv1:
             closest_scv1 = abs(zdata.iloc[i]['scv_dom_1'] - hr.scv1.value)
-            hr.scv1.rank = zdata.iloc[i]['rank']
+            hr.scv1.rank = i+1
         if abs(zdata.iloc[i]['scv_sub_dom_1'] - hr.scv2.value) < closest_scv2:
             closest_scv2 = abs(zdata.iloc[i]['scv_sub_dom_1'] - hr.scv2.value)
-            hr.scv2.rank = zdata.iloc[i]['rank']
+            hr.scv2.rank = i+1
         if abs(zdata.iloc[i]['scv_sub_dom_2'] - hr.scv3.value) < closest_scv3:
             closest_scv3 = abs(zdata.iloc[i]['scv_sub_dom_2'] - hr.scv3.value)
-            hr.scv3.rank = zdata.iloc[i]['rank']
+            hr.scv3.rank = i+1
         if abs(zdata.iloc[i]['scv'] - hr.scv.value) < closest_scv:
             closest_scv = abs(zdata.iloc[i]['scv'] - hr.scv.value)
-            hr.scv.rank = zdata.iloc[i]['rank']
+            hr.scv.rank = i+1
         if abs(zdata.iloc[i]['price'] - hr.price.value) < closest_price:
             closest_price = abs(zdata.iloc[i]['price'] - hr.price.value)
-            hr.price.rank = zdata.iloc[i]['rank']
-            hr.rental = RankValue(value=zdata.iloc[i]['rental'], rank=zdata.iloc[i]['rank'])
+            hr.price.rank = i+1
+            hr.rental = RankValue(value=zdata.iloc[i]['rental'], rank=i+1)
         if abs(zdata.iloc[i]['price_sqft'] - hr.price_sqft.value) < closest_price_sqft:
             closest_house_size = abs(zdata.iloc[i]['price_sqft'] - hr.price_sqft.value)
-            hr.price_sqft.rank = zdata.iloc[i]['rank']
+            hr.price_sqft.rank = i+1
         if abs(zdata.iloc[i]['size'] - hr.house_sqft.value) < closest_house_size:
             closest_house_size = abs(zdata.iloc[i]['size'] - hr.house_sqft.value)
-            hr.house_sqft.rank = zdata.iloc[i]['rank']
+            hr.house_sqft.rank = i+1
         if abs(zdata.iloc[i]['lot_size'] - hr.lot_sqft.value) < closest_lot_size:
             closest_lot_size = abs(zdata.iloc[i]['lot_size'] - hr.lot_sqft.value)
-            hr.lot_sqft.rank = zdata.iloc[i]['rank']
+            hr.lot_sqft.rank = i+1
     
     return hr 
     
