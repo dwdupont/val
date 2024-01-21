@@ -134,18 +134,29 @@ def generate_for_row(row, roc_path, sheet1, zipcode) -> pd.DataFrame:
         })
     
     return table 
-    
-    
 
+def check_nan(val):
+    if type(val) == str:
+        try:
+            val = int(val)
+            return False
+        except:
+            return True
+    return np.isnan(val)
+    
+# ['State','ZipCode','TotalProperties','MedianPrice','MeanPrice','MedianHouseSize', 'MeanHouseSize','MedianPricePerSqFt','MeanPricePerSqFt','MedianLotSize', 'MeanLotSize']
 
-def generate_csv(sheet1, roc_path='data/rates_of_change_full.xlsx', mumed_path='data/black-knight-data.xlsx'):
+def generate_csv(sheet1, roc_path='data/rates_of_change_full.xlsx', mumed_path='data/BK-Data-Manual-CA-1.24.xlsx'):
     sheet1 = np.array(sheet1)
+    cols = ['State','ZipCode','TotalProperties','MedianPrice','MeanPrice','MedianHouseSize', 'MeanHouseSize','MedianPricePerSqFt','MeanPricePerSqFt','MedianLotSize', 'MeanLotSize']
     mumed = pd.read_excel(mumed_path)
+    for ci in range(len(cols)):
+        mumed.columns.values[ci] = cols[ci]
     skipped = 0 
     exists = set([int(float(x.replace('.csv', ''))) for x in  os.listdir('data/market-data-zipcode')])
     to_do = []
     for i, zc in enumerate(mumed['ZipCode']):
-        if np.isnan(zc):
+        if check_nan(zc):
             continue
         zc = int(zc)
         if zc in exists:
@@ -160,7 +171,7 @@ def generate_csv(sheet1, roc_path='data/rates_of_change_full.xlsx', mumed_path='
         save_path = f'data/market-data-zipcode/{zc}.csv'
         if f'{zc}.csv' in exists:
             continue
-        if np.isnan(zc):
+        if check_nan(zc):
             skipped += 1 
             continue 
         zc = int(zc)

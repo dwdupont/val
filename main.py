@@ -1,5 +1,6 @@
 from basebot import BaseBot
 import openai
+from fastapi.middleware.cors import CORSMiddleware
 
 from bots.ValGPT import ValGPT
 from bots.DevBot import DevBot
@@ -8,7 +9,7 @@ def hello_world() -> dict:
     return {"message" : 'Hello World'}
 
 
-num_dev_bots = 9
+num_dev_bots = 21
 dev_bots = [DevBot(), ValGPT()]
 
 for i in range(1, num_dev_bots+1):
@@ -25,5 +26,19 @@ app = BaseBot.start_app(*dev_bots)
 app.add_api_route(f'/', hello_world, methods=['GET'])
 
 
+origins = [
+    "http://localhost:8000",
+    "https://localhost:8000",
+    'http://0.0.0.0:8000',
+    '*',
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
